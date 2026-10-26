@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuantDesk Pro - Dual-Market Quantitative Terminal (India &amp; US)</title>
+  <meta name="description" content="Professional Dual-Market Day Trading Terminal: Seamlessly trade Opening Range Breakouts in Indian Markets (NSE/BSE) and US Markets (NYSE/NASDAQ) with 10,000 Monte Carlo replays, mathematical sizing, and strict pre-trade risk firewall.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!-- App Container -->
+  <div class="app-container">
+    
+    <!-- Header Bar -->
+    <header class="app-header" id="appHeader">
+      <div class="brand-zone">
+        <div class="pulse-indicator live" id="liveIndicator"></div>
+        <div class="brand-titles">
+          <h1 class="brand-name"><span class="highlight">QUANT</span>DESK <span class="badge-v2">V2.5</span></h1>
+          <span class="brand-subtitle">DUAL-MARKET ENGINE &middot; NSE &amp; NYSE LIVE</span>
+        </div>
+      </div>
+
+      <!-- Market Switcher Segmented Control -->
+      <div class="market-selector-switch" id="marketSelectorSwitch" role="group" aria-label="Select Market">
+        <button class="mkt-toggle-btn active" id="btnMarketIN" data-market="IN" title="Switch to Indian Markets (NSE / BSE)">
+          <span class="mkt-flag">🇮🇳</span>
+          <div class="mkt-text">
+            <span class="mkt-title">INDIAN MARKETS</span>
+            <span class="mkt-meta">NSE &middot; ₹ INR</span>
+          </div>
+          <span class="mkt-active-pill">ACTIVE</span>
+        </button>
+        <button class="mkt-toggle-btn" id="btnMarketUS" data-market="US" title="Switch to US Markets (NYSE / NASDAQ)">
+          <span class="mkt-flag">🇺🇸</span>
+          <div class="mkt-text">
+            <span class="mkt-title">US MARKETS</span>
+            <span class="mkt-meta">NYSE &middot; $ USD</span>
+          </div>
+          <span class="mkt-active-pill">ACTIVE</span>
+        </button>
+      </div>
+
+      <!-- Live Dual Clock Hub -->
+      <div class="clock-hub" id="clockHub">
+        <!-- Indian Market Clock -->
+        <div class="clock-badge active-market-clock" id="clockBadgeIN" title="Indian Standard Time (NSE: 09:15 - 15:30 IST)">
+          <div class="clock-hdr">
+            <span class="clock-flag">🇮🇳</span>
+            <span class="clock-label">NSE (IST)</span>
+          </div>
+          <span class="clock-val mono" id="inTimeDisplay">--:--:-- IST</span>
+          <div class="market-status-pill pre" id="inStatusPill">
+            <span class="dot"></span>
+            <span id="inStatusText">NSE CLOSED</span>
+          </div>
+        </div>
+
+        <!-- US Market Clock -->
+        <div class="clock-badge" id="clockBadgeUS" title="Eastern Time (NYSE: 09:30 - 16:00 ET)">
+          <div class="clock-hdr">
+            <span class="clock-flag">🇺🇸</span>
+            <span class="clock-label">NYSE (ET)</span>
+          </div>
+          <span class="clock-val mono" id="usTimeDisplay">--:--:-- ET</span>
+          <div class="market-status-pill pre" id="usStatusPill">
+            <span class="dot"></span>
+            <span id="usStatusText">MARKET CLOSED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Metrics HUD -->
+      <div class="header-metrics" id="headerMetrics">
+        <div class="metric-pill">
+          <span class="m-title">BUDGET</span>
+          <span class="m-val mono text-accent" id="hdrBudget">₹100,000</span>
+        </div>
+        <div class="metric-pill">
+          <span class="m-title">MAX RISK / TRADE</span>
+          <span class="m-val mono text-warning" id="hdrMaxRisk">₹1,000</span>
+        </div>
+        <div class="metric-pill">
+          <span class="m-title">DAILY LOSS CAP</span>
+          <span class="m-val mono text-danger" id="hdrDailyCap">₹3,000</span>
+        </div>
+      </div>
+
+      <!-- Header Action Controls -->
+      <div class="header-actions">
+        <button class="btn btn-primary" id="btnTestLoop" title="Run instant 7-step simulated cycle on current market">
+          <span class="icon">⚡</span>
+          <span id="btnTestLoopText">Dry Run (7-Steps)</span>
+        </button>
+        <button class="btn btn-secondary" id="btnRefreshStatus" title="Refresh state from disk">
+          <span class="icon">🔄</span>
+        </button>
+        <button class="btn btn-icon" id="btnSettings" title="Configure Risk & Account Rules">
+          <span class="icon">⚙️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout (3-Column Grid) -->
+    <main class="workspace-grid" id="mainWorkspace">
+
+      <!-- COLUMN 1: Market Intelligence & Watchlist -->
+      <section class="grid-col col-left" aria-label="Market Intelligence">
+        
+        <!-- Scanner & Watchlist Panel -->
+        <div class="card panel-scanner">
+          <div class="card-header">
+            <div class="tab-group" id="scannerTabs">
+              <button class="tab-btn active" data-tab="tabWatchlist" id="tabBtnWatchlist">Watchlist (<span id="watchlistCount">15</span>)</button>
+              <button class="tab-btn" data-tab="tabDailyHits" id="tabBtnDailyHits">Daily Setups (<span id="dailyHitsCount">0</span>)</button>
+              <button class="tab-btn" data-tab="tabOrbHits" id="tabBtnOrbHits">ORB Hits (<span id="orbHitsCount">0</span>)</button>
+            </div>
+            <div class="header-btn-group">
+              <button class="btn-xs btn-outline" id="btnScanDaily" title="Run Pre-market Daily Scan">Daily Scan</button>
+              <button class="btn-xs btn-outline" id="btnScanOrb" title="Run 15-min Opening Range Breakout Scan">ORB Scan</button>
+              <button class="btn-xs btn-outline-accent" id="btnScanFixture" title="Run Off-Hours Replay Scan">Demo Replay</button>
+            </div>
+          </div>
+
+          <!-- Watchlist Tab Content -->
+          <div class="tab-pane active" id="tabWatchlist">
+            <div class="watchlist-controls">
+              <input type="text" id="inputAddTicker" class="input-dark" placeholder="Add symbol (e.g. RELIANCE, TCS)...">
+              <button class="btn-sm btn-secondary" id="btnAddTicker">Add</button>
+            </div>
+            <div class="ticker-list-scroll" id="watchlistContainer">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Daily Hits Tab Content -->
+          <div class="tab-pane" id="tabDailyHits">
+            <div class="hits-meta" id="dailyHitsMeta">No daily scan performed yet.</div>
+            <div class="ticker-list-scroll" id="dailyHitsContainer">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- ORB Hits Tab Content -->
+          <div class="tab-pane" id="tabOrbHits">
+            <div class="hits-meta" id="orbHitsMeta">No ORB scan performed yet.</div>
+            <div class="ticker-list-scroll" id="orbHitsContainer">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- News & Market Radar Panel -->
+        <div class="card panel-news">
+          <div class="card-header">
+            <div class="header-title-wrap">
+              <span class="panel-icon">📰</span>
+              <h2 class="card-title" id="newsHeaderTitle">NEWS &amp; DISCLOSURE RADAR</h2>
+            </div>
+            <div class="news-selected-tag" id="newsTickerTag">RELIANCE.NS</div>
+          </div>
+          <div class="news-feed-scroll" id="newsFeedContainer">
+            <div class="empty-feed">Click any ticker in the watchlist to pull live breaking news, disclosures and intraday move.</div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- COLUMN 2: Visual Trade Plan & Time Machine -->
+      <section class="grid-col col-center" aria-label="Trade Simulation & Visualizer">
+        
+        <!-- Active Trade Setup Card -->
+        <div class="card panel-setup">
+          <div class="card-header">
+            <div class="header-title-wrap">
+              <span class="badge-tag" id="setupTypeBadge">OPENING RANGE BREAKOUT</span>
+              <h2 class="ticker-active-heading" id="setupSymbol">RELIANCE.NS</h2>
+            </div>
+            <div class="setup-quick-actions">
+              <button class="btn-xs btn-outline" id="btnRecalcPlan">Re-Plan Exits</button>
+            </div>
+          </div>
+
+          <!-- Visual Price Ladder Bracket -->
+          <div class="bracket-ladder-container">
+            <div class="ladder-row target-row">
+              <div class="ladder-label text-success">
+                <span class="icon">🎯</span> TAKE PROFIT (1.0R)
+              </div>
+              <div class="ladder-price mono text-success" id="valTargetPrice">₹1,207.00</div>
+              <div class="ladder-sub text-success" id="valTargetGain">+₹12.00 / sh</div>
+            </div>
+
+            <div class="ladder-bar-indicator">
+              <div class="range-zone" id="ladderBarZone"></div>
+            </div>
+
+            <div class="ladder-row entry-row">
+              <div class="ladder-label text-accent">
+                <span class="icon">🚀</span> ENTRY PRICE
+              </div>
+              <div class="ladder-price mono text-accent" id="valEntryPrice">₹1,195.00</div>
+              <div class="ladder-sub text-muted" id="valEntryTime">Triggered: 09:35 AM IST</div>
+            </div>
+
+            <div class="ladder-bar-indicator">
+              <div class="risk-zone" id="ladderRiskZone"></div>
+            </div>
+
+            <div class="ladder-row stop-row">
+              <div class="ladder-label text-danger">
+                <span class="icon">🛑</span> STOP LOSS (OR-LOW)
+              </div>
+              <div class="ladder-price mono text-danger" id="valStopPrice">₹1,183.00</div>
+              <div class="ladder-sub text-danger" id="valStopLoss">-₹12.00 / sh</div>
+            </div>
+          </div>
+
+          <!-- Trade Spec Grid -->
+          <div class="trade-specs-grid">
+            <div class="spec-cell">
+              <span class="spec-label">RISK PER SHARE</span>
+              <span class="spec-val mono" id="specRiskPerShare">₹12.00</span>
+            </div>
+            <div class="spec-cell">
+              <span class="spec-label">REWARD : RISK</span>
+              <span class="spec-val mono text-accent" id="specRewardRisk">1.00</span>
+            </div>
+            <div class="spec-cell">
+              <span class="spec-label">INTRADAY SQUARE-OFF</span>
+              <span class="spec-val mono text-warning" id="specFlatBy">15:15 IST</span>
+            </div>
+            <div class="spec-cell">
+              <span class="spec-label">OVERNIGHT HOLD</span>
+              <span class="spec-val mono text-danger">STRICT NO (MIS)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time Machine Monte Carlo Simulation Card -->
+        <div class="card panel-timemachine">
+          <div class="card-header">
+            <div class="header-title-wrap">
+              <span class="panel-icon">⏱️</span>
+              <h2 class="card-title">TIME MACHINE &middot; 10,000 MONTE CARLO REPLAYS</h2>
+            </div>
+            <div class="tm-meta-tags">
+              <span class="badge-mini" id="tmReplaysBadge">10,000 RUNS</span>
+              <span class="badge-mini" id="tmSeedBadge">SEED 19</span>
+              <button class="btn-xs btn-primary" id="btnRunSim">Replay Setup</button>
+            </div>
+          </div>
+
+          <!-- Fan Chart Canvas -->
+          <div class="chart-wrapper">
+            <canvas id="fanChartCanvas" width="700" height="240"></canvas>
+            <div class="chart-legend">
+              <span class="leg-item"><span class="leg-dot color-p90"></span> 90% Confidence Fan</span>
+              <span class="leg-item"><span class="leg-dot color-p50"></span> Middle 50%</span>
+              <span class="leg-item"><span class="leg-line color-median"></span> Median Path</span>
+              <span class="leg-item"><span class="leg-line color-target"></span> Target Line</span>
+              <span class="leg-item"><span class="leg-line color-stop"></span> Stop Line</span>
+            </div>
+          </div>
+
+          <!-- Statistical Odds HUD -->
+          <div class="odds-hud-grid">
+            <div class="odd-card target-odd">
+              <span class="odd-title">TARGET FIRST</span>
+              <span class="odd-val mono text-success" id="oddTargetVal">28.4%</span>
+              <div class="progress-bar"><div class="fill fill-success" id="oddTargetFill" style="width: 28.4%;"></div></div>
+            </div>
+            <div class="odd-card stop-odd">
+              <span class="odd-title">STOP FIRST</span>
+              <span class="odd-val mono text-danger" id="oddStopVal">19.2%</span>
+              <div class="progress-bar"><div class="fill fill-danger" id="oddStopFill" style="width: 19.2%;"></div></div>
+            </div>
+            <div class="odd-card neither-odd">
+              <span class="odd-title">STILL OPEN AT CLOSE</span>
+              <span class="odd-val mono text-muted" id="oddNeitherVal">52.4%</span>
+              <div class="progress-bar"><div class="fill fill-muted" id="oddNeitherFill" style="width: 52.4%;"></div></div>
+            </div>
+            <div class="odd-card green-odd">
+              <span class="odd-title">OVERALL GREEN</span>
+              <span class="odd-val mono text-accent" id="oddGreenVal">56.1%</span>
+              <div class="progress-bar"><div class="fill fill-accent" id="oddGreenFill" style="width: 56.1%;"></div></div>
+            </div>
+          </div>
+
+          <!-- Historical & Verdict Bar -->
+          <div class="verdict-banner" id="verdictBanner">
+            <div class="verdict-icon">⚖️</div>
+            <div class="verdict-body">
+              <div class="verdict-title" id="verdictTitle">LEANS TOWARD THE TARGET</div>
+              <div class="verdict-sub" id="verdictSub">Target hit in 28.4% vs stop in 19.2%. 52.4% open at market cutoff. Average R: +0.092.</div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- COLUMN 3: Sizing, Risk Gate & Execution Ticket -->
+      <section class="grid-col col-right" aria-label="Risk & Execution">
+        
+        <!-- Position Sizing Card -->
+        <div class="card panel-sizing">
+          <div class="card-header">
+            <div class="header-title-wrap">
+              <span class="panel-icon">📐</span>
+              <h2 class="card-title">BUDGET SIZING</h2>
+            </div>
+            <span class="badge-mini text-warning">WHOLE SHARES</span>
+          </div>
+
+          <div class="sizing-summary-box">
+            <div class="sizing-shares-display">
+              <span class="shares-num mono text-accent" id="sizeSharesNum">62</span>
+              <span class="shares-label">SHARES <span id="sizeSharesSymbol">RELIANCE.NS</span></span>
+            </div>
+            <div class="sizing-loss-display">
+              <span class="loss-label">MAX LOSS AT STOP</span>
+              <span class="loss-num mono text-danger" id="sizeMaxLossNum">₹744.00</span>
+              <span class="loss-limit-sub" id="sizeLimitSub">Risk Limit: ₹1,000.00</span>
+            </div>
+          </div>
+
+          <!-- 4 Limits Comparison List -->
+          <div class="limits-list">
+            <div class="limit-row" id="limitRowLoss">
+              <span class="l-name" id="lblLimitLoss">1. Max Loss Limit (₹1,000 / ₹12.00)</span>
+              <span class="l-val mono" id="valLimitLoss">83 sh</span>
+            </div>
+            <div class="limit-row active-limit" id="limitRowCap">
+              <span class="l-name" id="lblLimitCap">2. Position Cap (75% / ₹1,195.00)</span>
+              <span class="l-val mono text-warning" id="valLimitCap">62 sh &larr; Binds</span>
+            </div>
+            <div class="limit-row" id="limitRowOrder">
+              <span class="l-name" id="lblLimitOrder">3. Max Order Limit (₹75,000 / ₹1,195.00)</span>
+              <span class="l-val mono" id="valLimitOrder">62 sh</span>
+            </div>
+            <div class="limit-row" id="limitRowCash">
+              <span class="l-name" id="lblLimitCash">4. Cash Buffer (₹90,000 / ₹1,195.00)</span>
+              <span class="l-val mono" id="valLimitCash">75 sh</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Firewall (10 Gates) Card -->
+        <div class="card panel-risk">
+          <div class="card-header">
+            <div class="header-title-wrap">
+              <span class="panel-icon">🛡️</span>
+              <h2 class="card-title">RISK FIREWALL (10 GATES)</h2>
+            </div>
+            <span class="status-badge pass" id="riskStatusBadge">PASS</span>
+          </div>
+
+          <div class="risk-checklist" id="riskChecklist">
+            <div class="check-item passed"><span>✓</span> Whole shares bracket order format</div>
+            <div class="check-item passed"><span>✓</span> Asset check: Valid Equity / Stock</div>
+            <div class="check-item passed"><span>✓</span> Long-only enforcement: No short sales</div>
+            <div class="check-item passed"><span>✓</span> Blocked ticker list check: Clean</div>
+            <div class="check-item passed"><span>✓</span> Order size within allowed budget limits</div>
+            <div class="check-item passed"><span>✓</span> Account position cap respected (&le; 75%)</div>
+            <div class="check-item passed"><span>✓</span> 10% Cash buffer preserved (no margin debt)</div>
+            <div class="check-item passed"><span>✓</span> Stop-loss mandatory &amp; defined</div>
+            <div class="check-item passed"><span>✓</span> Trade risk fits max loss per trade</div>
+            <div class="check-item passed" id="gateWindowCheck"><span>✓</span> Entry window: Session hours active</div>
+          </div>
+        </div>
+
+        <!-- Broker Order Execution Ticket Card -->
+        <div class="card panel-ticket">
+          <div class="card-header">
+            <div class="header-title-wrap">
+              <span class="panel-icon">🎫</span>
+              <h2 class="card-title">EXECUTION TICKET</h2>
+            </div>
+            <span class="badge-tag" id="ticketBrokerTag">ZERODHA KITE (NSE MIS)</span>
+          </div>
+
+          <div class="ticket-body">
+            <div class="ticket-row-main">
+              <span class="ticket-side buy">BUY</span>
+              <span class="ticket-qty mono" id="tktQty">62</span>
+              <span class="ticket-sym" id="tktSym">RELIANCE.NS</span>
+              <span class="ticket-type" id="tktType">MIS DAY</span>
+            </div>
+
+            <div class="ticket-bracket-grid">
+              <div class="bracket-item">
+                <span class="b-lbl">STOP-LOSS</span>
+                <span class="b-val mono text-danger" id="tktStop">₹1,183.00</span>
+              </div>
+              <div class="bracket-item">
+                <span class="b-lbl">TAKE-PROFIT</span>
+                <span class="b-val mono text-success" id="tktTarget">₹1,207.00</span>
+              </div>
+            </div>
+
+            <!-- 3-Gate Approval Indicators -->
+            <div class="three-gates">
+              <div class="gate-step passed">
+                <span class="g-num">1</span>
+                <span class="g-name">Risk PASS</span>
+              </div>
+              <div class="gate-line"></div>
+              <div class="gate-step pending">
+                <span class="g-num">2</span>
+                <span class="g-name">User "Yes"</span>
+              </div>
+              <div class="gate-line"></div>
+              <div class="gate-step pending">
+                <span class="g-num">3</span>
+                <span class="g-name">Broker Stage</span>
+              </div>
+            </div>
+
+            <!-- Ticket JSON Accordion -->
+            <details class="json-details">
+              <summary id="ticketJsonSummary">View Broker API JSON (Zerodha / Alpaca)</summary>
+              <pre class="json-pre mono" id="ticketJsonPreview">
+{
+  "tradingsymbol": "RELIANCE",
+  "exchange": "NSE",
+  "transaction_type": "BUY",
+  "order_type": "MARKET",
+  "quantity": 62,
+  "product": "MIS",
+  "validity": "DAY",
+  "stoploss": 1183.0,
+  "squareoff": 1207.0,
+  "tag": "quantdesk_orb"
+}
+              </pre>
+            </details>
+
+            <button class="btn btn-primary full-width" id="btnPlaceOrder">
+              <span id="btnPlaceOrderText">Approve &amp; Stage Order</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Execution Terminal Drawer (Collapsible) -->
+    <div class="terminal-drawer" id="terminalDrawer">
+      <div class="drawer-header" id="drawerHeader">
+        <div class="drawer-title">
+          <span class="icon">💻</span>
+          <span>SYSTEM LOGS &middot; SUBPROCESS STREAM</span>
+        </div>
+        <div class="drawer-controls">
+          <button class="btn-xs btn-outline" id="btnClearLogs">Clear</button>
+          <button class="btn-xs btn-outline" id="btnToggleDrawer">Minimize &darr;</button>
+        </div>
+      </div>
+      <div class="drawer-body">
+        <pre class="log-stream mono" id="logStream">Ready. Dual-Market QuantDesk Engine live.
+Supports Indian Markets (NSE/BSE, ₹ INR) &amp; US Markets (NYSE/NASDAQ, $ USD).</pre>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="settingsModalTitle">Trading Desk Settings &amp; Rules</h3>
+          <button class="btn-close" id="btnCloseSettings">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="cfgBudget" id="lblCfgBudget">Account Budget (₹ / $):</label>
+            <input type="number" id="cfgBudget" class="input-dark" value="100000">
+          </div>
+          <div class="form-group">
+            <label for="cfgMaxLoss" id="lblCfgMaxLoss">Max Loss Per Trade (₹ / $):</label>
+            <input type="number" id="cfgMaxLoss" class="input-dark" value="1000">
+          </div>
+          <div class="form-group">
+            <label for="cfgMaxDaily" id="lblCfgMaxDaily">Max Daily Loss Limit (₹ / $):</label>
+            <input type="number" id="cfgMaxDaily" class="input-dark" value="3000">
+          </div>
+          <div class="form-group">
+            <label for="cfgCashBuffer">Cash Buffer Percentage (%):</label>
+            <input type="number" id="cfgCashBuffer" class="input-dark" value="10">
+          </div>
+          <div class="form-group">
+            <label for="cfgPositionCap">Max Position Cap (% of account):</label>
+            <input type="number" id="cfgPositionCap" class="input-dark" value="75">
+          </div>
+          <div class="form-group">
+            <label for="cfgFlatBy" id="lblCfgFlatBy">Flat-by Market Close Time (HH:MM):</label>
+            <input type="text" id="cfgFlatBy" class="input-dark" value="15:15">
+          </div>
+          <div class="form-group">
+            <label for="cfgSecUserAgent">User-Agent / Broker ID (Name email@domain.com):</label>
+            <input type="text" id="cfgSecUserAgent" class="input-dark" value="Trader desk@uwuda.trading">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="btnCancelSettings">Cancel</button>
+          <button class="btn btn-primary" id="btnSaveSettings">Save Rules</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

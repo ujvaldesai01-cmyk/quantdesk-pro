@@ -1,0 +1,28 @@
+{
+  "created_by": "trader-exit",
+  "symbol": "NVDA",
+  "side": "buy",
+  "date": "2026-10-23",
+  "setup": "orb",
+  "entry": 364.18,
+  "entry_time": null,
+  "entry_bar": null,
+  "interval": "5m",
+  "opening_range": {
+    "high": 348.0,
+    "low": 344.0,
+    "minutes": 15
+  },
+  "stop": 346.0,
+  "stop_rule": "or_mid",
+  "stop_label": "opening-range midpoint",
+  "target": 382.36,
+  "target_r": 1.0,
+  "target_label": "1R (one times the risk)",
+  "risk_per_share": 18.18,
+  "reward_risk": 1.0,
+  "flat_by": "15:55",
+  "stop_detail": "($348.00 + $344.00) / 2 = $346",
+  "created_at": "2026-10-23T17:27:03Z",
+  "note": "A stop is a plan, not a guarantee: a gap or a fast market can fill past it."
+}

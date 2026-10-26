@@ -1,0 +1,2 @@
+# QuantDesk Pro uses Python 3.9+ standard library modules (zoneinfo, urllib, http.server, json, subprocess)
+# No external pip dependencies required.

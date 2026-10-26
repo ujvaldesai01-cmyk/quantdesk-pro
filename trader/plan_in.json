@@ -1,0 +1,28 @@
+{
+  "created_by": "trader-exit",
+  "symbol": "RELIANCE.NS",
+  "side": "buy",
+  "date": "2026-10-23",
+  "setup": "orb",
+  "entry": 1195.0,
+  "entry_time": null,
+  "entry_bar": null,
+  "interval": "5m",
+  "opening_range": {
+    "high": 1194.3,
+    "low": 1183.0,
+    "minutes": 15
+  },
+  "stop": 1183.0,
+  "stop_rule": "or_low",
+  "stop_label": "opening-range low",
+  "target": 1207.0,
+  "target_r": 1.0,
+  "target_label": "1R (one times the risk)",
+  "risk_per_share": 12.0,
+  "reward_risk": 1.0,
+  "flat_by": "15:15",
+  "stop_detail": "",
+  "created_at": "2026-10-23T17:24:14Z",
+  "note": "A stop is a plan, not a guarantee: a gap or a fast market can fill past it."
+}

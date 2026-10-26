@@ -1,0 +1,22 @@
+{
+  "created_by": "trader-entry",
+  "symbol": "RELIANCE.NS",
+  "setup": "orb",
+  "side": "buy",
+  "date": "2026-10-23",
+  "status": "waiting",
+  "time": null,
+  "bar_start": null,
+  "bar_index": null,
+  "price": null,
+  "level": 1201.6,
+  "interval": "5m",
+  "opening_range": {
+    "high": 1201.6,
+    "low": 1183.0,
+    "minutes": 15
+  },
+  "source": "yahoo",
+  "checked_at": "2026-10-23T04:05:00Z",
+  "reason": "last close $1193.10 (9:30 bar), $8.50 under the range high $1201.60 (-0.71%)"
+}

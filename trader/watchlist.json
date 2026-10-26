@@ -1,0 +1,38 @@
+{
+  "created_by": "trader-scanner",
+  "created_at": "2026-10-23T17:29:34Z",
+  "mode": "daily",
+  "as_of": "2026-10-22 close",
+  "universe": 15,
+  "scanned": 13,
+  "failed": 0,
+  "source": "yahoo",
+  "filters": {
+    "min_price": 5.0,
+    "min_volume": 1000000
+  },
+  "note": "A scan is a list of charts that match a rule, not a list of stocks to buy.",
+  "hits": [
+    {
+      "symbol": "INFY.NS",
+      "setups": [
+        "bull_flag"
+      ],
+      "price": 1153.8,
+      "close_date": "2026-10-22",
+      "rsi": 64.2,
+      "volume": 33042008
+    },
+    {
+      "symbol": "TCS.NS",
+      "setups": [
+        "breakout_20d",
+        "bull_flag"
+      ],
+      "price": 2530.0,
+      "close_date": "2026-10-22",
+      "rsi": 74.3,
+      "volume": 6856640
+    }
+  ]
+}
