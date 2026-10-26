@@ -26,13 +26,14 @@ an order on its own. Paper trading is the default.
 Deploy this interactive dual-market platform live to the cloud with permanent HTTPS so you can share the link with anyone:
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ujvaldesai01-cmyk/quantdesk-pro)
-[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&repository=github.com/ujvaldesai01-cmyk/quantdesk-pro&branch=main&name=quantdesk-pro)
 
 ### 1-Click Setup on Render (Free & Permanent)
-1. Click the **Deploy to Render** button above (or visit [render.com](https://render.com) and log in with GitHub).
-2. Connect your repository: `ujvaldesai01-cmyk/quantdesk-pro`.
-3. Render automatically detects `render.yaml` / `server.py` and builds the service.
-4. Your permanent live URL will be: `https://quantdesk-pro.onrender.com` (or your custom service name). Share this link with your friends!
+1. Open 👉 [render.com/deploy?repo=https://github.com/ujvaldesai01-cmyk/quantdesk-pro](https://render.com/deploy?repo=https://github.com/ujvaldesai01-cmyk/quantdesk-pro) (or log into [render.com](https://dashboard.render.com) with GitHub).
+2. Click **Connect GitHub** and select your repo: `ujvaldesai01-cmyk/quantdesk-pro`.
+3. Choose the **Free** instance type ($0/mo) and click **Create Web Service**.
+4. In ~60 seconds, Render will launch your live site at: `https://quantdesk-pro.onrender.com`.
+5. Send that link to your friend — it stays active 24/7!
+
 
 ## Install
 
