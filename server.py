@@ -77,10 +77,18 @@ def get_watchlist(market=None):
 
 
 def get_market_clocks():
-    utc = datetime.datetime.now(datetime.timezone.utc)
+    try:
+        import zoneinfo
+        tz_ist = zoneinfo.ZoneInfo("Asia/Kolkata")
+        tz_ny = zoneinfo.ZoneInfo("America/New_York")
+        ist = datetime.datetime.now(tz_ist)
+        ny = datetime.datetime.now(tz_ny)
+    except Exception:
+        utc = datetime.datetime.now(datetime.timezone.utc)
+        ist = utc + datetime.timedelta(hours=5, minutes=30)
+        ny = utc + datetime.timedelta(hours=-4)
 
-    # 1. Indian Standard Time (IST: UTC+5:30, no DST)
-    ist = utc + datetime.timedelta(hours=5, minutes=30)
+    # 1. Indian Standard Time (IST: UTC+5:30)
     ist_time = ist.time()
     is_in_open = (ist.weekday() < 5 and datetime.time(9, 15) <= ist_time < datetime.time(15, 30))
     is_in_pre = (ist.weekday() < 5 and datetime.time(9, 0) <= ist_time < datetime.time(9, 15))
@@ -89,7 +97,7 @@ def get_market_clocks():
     if is_in_open:
         in_status = "NSE OPEN"
     elif is_in_pre:
-        in_status = "PRE-MARKET"
+        in_status = "NSE PRE-MKT"
     elif is_in_post:
         in_status = "POST-MARKET"
     else:
@@ -107,8 +115,7 @@ def get_market_clocks():
         "timezone": "IST"
     }
 
-    # 2. US Eastern Time (ET: UTC-4 EDT in Oct, UTC-5 EST)
-    ny = utc + datetime.timedelta(hours=-4)
+    # 2. US Eastern Time (ET: New York)
     ny_time = ny.time()
     is_us_open = (ny.weekday() < 5 and datetime.time(9, 30) <= ny_time < datetime.time(16, 0))
     is_us_pre = (ny.weekday() < 5 and datetime.time(4, 0) <= ny_time < datetime.time(9, 30))
@@ -117,7 +124,7 @@ def get_market_clocks():
     if is_us_open:
         us_status = "NYSE OPEN"
     elif is_us_pre:
-        us_status = "PRE-MARKET"
+        us_status = "NYSE PRE-MKT"
     elif is_us_post:
         us_status = "POST-MARKET"
     else:

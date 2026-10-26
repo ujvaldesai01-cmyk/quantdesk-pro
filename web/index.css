@@ -294,6 +294,19 @@ body {
   line-height: 1.2;
 }
 
+.clock-countdown {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  margin: 1px 0 2px 0;
+  white-space: nowrap;
+}
+
+.clock-badge.active-market-clock .clock-countdown {
+  color: #7dd3fc;
+}
+
 .market-status-pill {
   display: flex;
   align-items: center;

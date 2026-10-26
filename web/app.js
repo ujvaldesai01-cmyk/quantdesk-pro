@@ -222,46 +222,9 @@ function renderHeader() {
   document.getElementById('hdrMaxRisk').textContent = formatCurrency(maxRisk, 0);
   document.getElementById('hdrDailyCap').textContent = formatCurrency(dailyCap, 0);
 
-  // Dual Clocks
-  const clocks = state.clocks || {};
-  const inClk = clocks.in || {};
-  const usClk = clocks.us || {};
+  // Dual Live Clocks & Countdown Timers
+  updateLiveClocks();
 
-  // Indian Clock
-  const inTimeEl = document.getElementById('inTimeDisplay');
-  const inPill = document.getElementById('inStatusPill');
-  const inText = document.getElementById('inStatusText');
-  if (inTimeEl) inTimeEl.textContent = inClk.time || inClk.time_formatted || inClk.local_time || '--:--:-- IST';
-  if (inPill && inText) {
-    if (inClk.is_market_open) {
-      inPill.className = 'market-status-pill open';
-      inText.textContent = inClk.status_text || inClk.status_label || 'NSE OPEN';
-    } else if (inClk.is_pre_market) {
-      inPill.className = 'market-status-pill pre';
-      inText.textContent = inClk.status_text || inClk.status_label || 'NSE PRE-MKT';
-    } else {
-      inPill.className = 'market-status-pill closed';
-      inText.textContent = inClk.status_text || inClk.status_label || 'NSE CLOSED';
-    }
-  }
-
-  // US Clock
-  const usTimeEl = document.getElementById('usTimeDisplay');
-  const usPill = document.getElementById('usStatusPill');
-  const usText = document.getElementById('usStatusText');
-  if (usTimeEl) usTimeEl.textContent = usClk.time || usClk.time_formatted || usClk.local_time || '--:--:-- ET';
-  if (usPill && usText) {
-    if (usClk.is_market_open) {
-      usPill.className = 'market-status-pill open';
-      usText.textContent = usClk.status_text || usClk.status_label || 'NYSE OPEN';
-    } else if (usClk.is_pre_market) {
-      usPill.className = 'market-status-pill pre';
-      usText.textContent = usClk.status_text || usClk.status_label || 'NYSE PRE-MKT';
-    } else {
-      usPill.className = 'market-status-pill closed';
-      usText.textContent = usClk.status_text || usClk.status_label || 'MARKET CLOSED';
-    }
-  }
 
   // Input placeholder
   const input = document.getElementById('inputAddTicker');
@@ -797,19 +760,167 @@ function appendLog(msg) {
   if (drawerBody) drawerBody.scrollTop = drawerBody.scrollHeight;
 }
 
+function updateLiveClocks() {
+  const now = new Date();
+
+  // 1. Indian Standard Time (IST - Asia/Kolkata)
+  try {
+    const inFormatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Kolkata',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      weekday: 'short'
+    });
+    const inParts = inFormatter.formatToParts(now);
+    const inHour = parseInt(inParts.find(p => p.type === 'hour').value, 10);
+    const inMin = parseInt(inParts.find(p => p.type === 'minute').value, 10);
+    const inSec = parseInt(inParts.find(p => p.type === 'second').value, 10);
+    const inWeekday = inParts.find(p => p.type === 'weekday').value;
+    const inMinutes = inHour * 60 + inMin;
+    const isWeekendIN = (inWeekday === 'Sat' || inWeekday === 'Sun');
+
+    // NSE timings: Pre-market 09:00 - 09:15, Regular Open 09:15 - 15:30 (555 to 930 mins)
+    const isINOpen = !isWeekendIN && (inMinutes >= 555 && inMinutes < 930);
+    const isINPre = !isWeekendIN && (inMinutes >= 540 && inMinutes < 555);
+
+    let inStatusText = 'NSE CLOSED';
+    let inStatusClass = 'closed';
+    let inCountdown = '';
+
+    if (isINOpen) {
+      inStatusText = 'NSE OPEN';
+      inStatusClass = 'open';
+      const remSec = (930 * 60) - (inMinutes * 60 + inSec);
+      const remH = Math.floor(remSec / 3600);
+      const remM = Math.floor((remSec % 3600) / 60);
+      const remS = remSec % 60;
+      inCountdown = `Closes in ${remH}h ${remM.toString().padStart(2, '0')}m ${remS.toString().padStart(2, '0')}s`;
+    } else if (isINPre) {
+      inStatusText = 'NSE PRE-MKT';
+      inStatusClass = 'pre';
+      const remSec = (555 * 60) - (inMinutes * 60 + inSec);
+      inCountdown = `Opens in ${Math.floor(remSec / 60)}m ${remSec % 60}s`;
+    } else {
+      inStatusText = 'NSE CLOSED';
+      inStatusClass = 'closed';
+      if (isWeekendIN) {
+        inCountdown = 'Opens Monday 09:15 IST';
+      } else if (inMinutes < 540) {
+        const remSec = (555 * 60) - (inMinutes * 60 + inSec);
+        const remH = Math.floor(remSec / 3600);
+        const remM = Math.floor((remSec % 3600) / 60);
+        inCountdown = `Opens in ${remH}h ${remM}m`;
+      } else {
+        inCountdown = 'Opens Tomorrow 09:15 IST';
+      }
+    }
+
+    const inTimeStr = `${inHour.toString().padStart(2, '0')}:${inMin.toString().padStart(2, '0')}:${inSec.toString().padStart(2, '0')} IST`;
+    const inTimeEl = document.getElementById('inTimeDisplay');
+    if (inTimeEl) inTimeEl.textContent = inTimeStr;
+    const inPill = document.getElementById('inStatusPill');
+    const inText = document.getElementById('inStatusText');
+    if (inPill && inText) {
+      inPill.className = `market-status-pill ${inStatusClass}`;
+      inText.textContent = inStatusText;
+    }
+    const inCdEl = document.getElementById('inCountdown');
+    if (inCdEl) inCdEl.textContent = inCountdown;
+  } catch (_) {}
+
+  // 2. US Eastern Time (ET - America/New_York)
+  try {
+    const usFormatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'America/New_York',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      weekday: 'short'
+    });
+    const usParts = usFormatter.formatToParts(now);
+    const usHour = parseInt(usParts.find(p => p.type === 'hour').value, 10);
+    const usMin = parseInt(usParts.find(p => p.type === 'minute').value, 10);
+    const usSec = parseInt(usParts.find(p => p.type === 'second').value, 10);
+    const usWeekday = usParts.find(p => p.type === 'weekday').value;
+    const usMinutes = usHour * 60 + usMin;
+    const isWeekendUS = (usWeekday === 'Sat' || usWeekday === 'Sun');
+
+    // NYSE timings: Pre-market 04:00 - 09:30, Regular Open 09:30 - 16:00 (570 to 960 mins)
+    const isUSOpen = !isWeekendUS && (usMinutes >= 570 && usMinutes < 960);
+    const isUSPre = !isWeekendUS && (usMinutes >= 240 && usMinutes < 570);
+
+    let usStatusText = 'MARKET CLOSED';
+    let usStatusClass = 'closed';
+    let usCountdown = '';
+
+    if (isUSOpen) {
+      usStatusText = 'NYSE OPEN';
+      usStatusClass = 'open';
+      const remSec = (960 * 60) - (usMinutes * 60 + usSec);
+      const remH = Math.floor(remSec / 3600);
+      const remM = Math.floor((remSec % 3600) / 60);
+      const remS = remSec % 60;
+      usCountdown = `Closes in ${remH}h ${remM.toString().padStart(2, '0')}m ${remS.toString().padStart(2, '0')}s`;
+    } else if (isUSPre) {
+      usStatusText = 'NYSE PRE-MKT';
+      usStatusClass = 'pre';
+      const remSec = (570 * 60) - (usMinutes * 60 + usSec);
+      const remH = Math.floor(remSec / 3600);
+      const remM = Math.floor((remSec % 3600) / 60);
+      const remS = remSec % 60;
+      usCountdown = `Opens in ${remH > 0 ? remH + 'h ' : ''}${remM}m ${remS}s`;
+    } else {
+      usStatusText = 'MARKET CLOSED';
+      usStatusClass = 'closed';
+      if (isWeekendUS) {
+        usCountdown = 'Opens Monday 09:30 ET';
+      } else if (usMinutes < 240) {
+        const remSec = (570 * 60) - (usMinutes * 60 + usSec);
+        const remH = Math.floor(remSec / 3600);
+        const remM = Math.floor((remSec % 3600) / 60);
+        usCountdown = `Opens in ${remH}h ${remM}m`;
+      } else {
+        usCountdown = 'Opens Tomorrow 09:30 ET';
+      }
+    }
+
+    const usTimeStr = `${usHour.toString().padStart(2, '0')}:${usMin.toString().padStart(2, '0')}:${usSec.toString().padStart(2, '0')} ET`;
+    const usTimeEl = document.getElementById('usTimeDisplay');
+    if (usTimeEl) usTimeEl.textContent = usTimeStr;
+    const usPill = document.getElementById('usStatusPill');
+    const usText = document.getElementById('usStatusText');
+    if (usPill && usText) {
+      usPill.className = `market-status-pill ${usStatusClass}`;
+      usText.textContent = usStatusText;
+    }
+    const usCdEl = document.getElementById('usCountdown');
+    if (usCdEl) usCdEl.textContent = usCountdown;
+  } catch (_) {}
+}
+
 function startClockTicker() {
+  // 1. Immediately render initial live clock values
+  updateLiveClocks();
+
+  // 2. High-precision 1000ms interval for smooth second-by-second live ticking & countdowns
+  setInterval(updateLiveClocks, 1000);
+
+  // 3. Background periodic status sync with server every 10 seconds
   setInterval(async () => {
     try {
       const res = await fetch('/api/status');
       const data = await res.json();
-      if (data.clocks) {
-        state.clocks = data.clocks;
-        state.clock = data.clock;
-        renderHeader();
+      if (data) {
+        state.config = data.config || state.config;
+        state.market_info = data.market_info || state.market_info;
       }
     } catch (_) {}
-  }, 3500);
+  }, 10000);
 }
+
 
 function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
